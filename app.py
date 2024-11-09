@@ -298,9 +298,10 @@ def app():
     #     end_time = st.time_input("終了時間")
     
     if st.button("空き状況を確認"):
-        with st.spinner("データを取得中..."):
+        driver = setup_driver()
+        with st.spinner("データを取得中....."):
             try:
-                driver = setup_driver()
+                
                 
                 # メインの処理を実行
                 driver.get("https://www.shisetsu.city.yokohama.lg.jp/user/Home")
