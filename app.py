@@ -3,18 +3,26 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.service import Service
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import streamlit as st
 
-from selenium.webdriver.chrome.options import Options
-
 
 def setup_driver():
-    """Chromeドライバーの設定"""
     chrome_options = Options()
-    chrome_options.add_argument('--headless')  # ヘッドレスモードで実行
-    return webdriver.Chrome(options=chrome_options)
+    chrome_options.add_argument("--headless")  # ヘッドレスモード
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")  # 必要に応じて追加
+    chrome_options.add_argument("--disable-dev-shm-usage")  # 必要に応じて追加
+    
+    # WebDriverのインストールと起動
+    service = Service(ChromeDriverManager().install())
+    return webdriver.Chrome(service=service, options=chrome_options)
+
 
 # def click_button_by_id(driver, id=""):
 #     try:
