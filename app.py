@@ -10,7 +10,61 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import streamlit as st
-#test
+
+# 緯度経度取得
+from geopy.geocoders import Nominatim
+import folium
+from streamlit_folium import folium_static
+
+def get_coordinates(facility_name):
+    """施設名から座標を取得"""
+    try:
+        geolocator = Nominatim(user_agent="tennis_connect")
+        # 横浜市を追加して検索精度を上げる
+        location = geolocator.geocode(f"{facility_name} 横浜市")
+        if location:
+            return location.latitude, location.longitude
+        return None
+    except Exception as e:
+        print(f"座標の取得に失敗: {e}")
+        return get_coordinates(facility_name)
+    """施設名から座標を取得"""
+    try:
+        geolocator = Nominatim(user_agent="tennis_connect")
+        # 横浜市を追加して検索精度を上げる
+        location = geolocator.geocode(f"{facility_name} 横浜市")
+        if location:
+            return location.latitude, location.longitude
+        return None
+    except Exception as e:
+        print(f"座標の取得に失敗: {e}")
+        return None
+
+def create_map(facilities):
+    """施設を表示するマップを作成"""
+    # 横浜市の中心座標
+    yokohama_center = [35.4498, 139.6424]
+    m = folium.Map(location=yokohama_center, zoom_start=11)
+    
+    for facility in facilities:
+        facility_name = facility['室場']
+        coords = get_coordinates(facility_name)
+        
+        if coords:
+            # ポップアップの内容を作成
+            popup_content = f"""
+            <b>{facility['室場']}</b><br>
+            時間帯: {facility['時間帯']}
+            """
+            
+            # マーカーを追加
+            folium.Marker(
+                coords,
+                popup=popup_content,
+                tooltip=facility_name
+            ).add_to(m)
+    
+    return m
 
 def setup_driver():
     chrome_options = Options()
@@ -428,16 +482,39 @@ def app():
 
                 # 結果の表示
                 if facilities:
+                    # st.success("データの取得に成功しました")
+                    # st.write("取得した施設情報:")
+                    # for facility in facilities:
+                    #     if facility['施設'] is not None:
+                    #         st.write(f"""
+                    #         - 施設: {facility['施設']}
+                    #         - 室場: {facility['室場']}
+                    #         - 日付: {facility['日付']}
+                    #         - 時間帯: {facility['時間帯']}
+                    #         """)
+                    # st.write("### 施設の位置")
+                    # # 地図表示        
+                    # m = create_map(facilities)
+                    # folium_static(m)
+                    
                     st.success("データの取得に成功しました")
-                    st.write("取得した施設情報:")
-                    for facility in facilities:
-                        if facility['施設'] is not None:
+                    # タブ表示
+                    tab1, tab2 = st.tabs(["リスト表示", "地図表示"])
+                    
+                    with tab1:
+                        st.write("### 利用可能な施設")
+                        for facility in facilities:
                             st.write(f"""
                             - 施設: {facility['施設']}
                             - 室場: {facility['室場']}
                             - 日付: {facility['日付']}
                             - 時間帯: {facility['時間帯']}
                             """)
+                    
+                    with tab2:
+                        st.write("### 施設の位置")
+                        m = create_map(facilities)
+                        folium_static(m)        
                 else:
                     st.warning("利用可能な施設が見つかりませんでした")
 
