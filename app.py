@@ -203,6 +203,50 @@ def get_facility_info(driver):
                     "日付": cols[2].text,
                     "時間帯": cols[3].text
                 }
+                if not facility_info["施設"]:
+                    continue
+                facilities.append(facility_info)
+                print(f"取得した施設情報: {facility_info}")
+
+        return facilities
+
+    except Exception as e:
+        print(f"施設情報の取得中にエラーが発生しました: {e}")
+        return []
+
+def get_facility_info2(driver):
+    """
+    施設情報テーブルから情報を取得する関数
+    """
+    try:
+        # テーブルが読み込まれるまで待機
+        table = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CLASS_NAME, "table.table.table-bordered.table-striped.facilities"))
+        )
+
+        # すべての行を取得
+        rows = table.find_elements(By.TAG_NAME, "tr")
+        facilities = []
+
+        # データが存在しない場合は早期リターン
+        if len(rows) <= 1:  # ヘッダー行のみの場合
+            print("利用可能な施設が見つかりませんでした")
+            return []
+
+        # ヘッダー行をスキップして2行目から処理
+        for row in rows[1:]:
+            cols = row.find_elements(By.TAG_NAME, "td")
+            if len(cols) >= 5:  # 必要な列数があることを確認
+                facility_info = {
+                    "施設": cols[0].text,
+                    "室場": cols[1].text,
+                    "日付": cols[2].text,
+                    "時間帯": cols[3].text
+                }
+                # 施設名が空の場合はスキップ
+                if not facility_info["施設"]:
+                    continue
                 facilities.append(facility_info)
                 print(f"取得した施設情報: {facility_info}")
 
@@ -366,6 +410,10 @@ def app():
                     # raise Exception("さらに読み込むボタンをクリックできませんでした。")
 
                 facilities = get_facility_info(driver)
+                if not facilities:
+                    st.warning("利用可能な施設が見つかりませんでした。処理を終了します。")
+                    driver.quit()
+                    return  # ここで処理を終了
                 print(f"取得した施設情報: {facilities}")
                 # for facility in facilities:
                 #     print(f"""
